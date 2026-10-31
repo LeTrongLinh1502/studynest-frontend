@@ -18,6 +18,8 @@ function DashboardPage() {
     }
   }
 
+  if (!user) return null
+
   return (
     <main className="dashboard-page">
       <header className="dashboard-header">

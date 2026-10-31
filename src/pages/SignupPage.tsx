@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ApiError } from '../api/httpClient'
 import { useAuth } from '../auth/useAuth'
 import AuthLayout from '../components/AuthLayout'
 import FormField from '../components/FormField'
+import type { FieldErrors, SignupRequest } from '../types/auth'
 
-const initialForm = {
+type SignupForm = SignupRequest & { confirmPassword: string }
+
+const initialForm: SignupForm = {
   fullName: '',
   email: '',
   password: '',
@@ -13,21 +18,25 @@ const initialForm = {
 
 function SignupPage() {
   const [form, setForm] = useState(initialForm)
-  const [fieldErrors, setFieldErrors] = useState({})
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { signup } = useAuth()
   const navigate = useNavigate()
 
-  function handleChange(event) {
-    const { name, value } = event.target
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.currentTarget
     setForm((current) => ({ ...current, [name]: value }))
-    setFieldErrors((current) => ({ ...current, [name]: undefined }))
+    setFieldErrors((current) => {
+      const next = { ...current }
+      delete next[name]
+      return next
+    })
     setSubmitError('')
   }
 
-  function validate() {
-    const errors = {}
+  function validate(): FieldErrors {
+    const errors: FieldErrors = {}
     if (form.password.length < 8) errors.password = 'Mật khẩu cần có ít nhất 8 ký tự.'
     if (form.password !== form.confirmPassword) {
       errors.confirmPassword = 'Mật khẩu xác nhận chưa khớp.'
@@ -35,7 +44,7 @@ function SignupPage() {
     return errors
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const clientErrors = validate()
 
@@ -59,8 +68,8 @@ function SignupPage() {
         state: { registeredEmail: form.email.trim() },
       })
     } catch (error) {
-      setFieldErrors(error.fieldErrors ?? {})
-      setSubmitError(error.message)
+      setFieldErrors(error instanceof ApiError ? error.fieldErrors : {})
+      setSubmitError(error instanceof Error ? error.message : 'Đăng ký không thành công.')
     } finally {
       setIsSubmitting(false)
     }

@@ -1,6 +1,14 @@
+import type { ReactNode } from 'react'
 import BrandLogo from './BrandLogo'
 
-function AuthLayout({ eyebrow, title, description, children }) {
+interface AuthLayoutProps {
+  eyebrow: string
+  title: string
+  description: string
+  children: ReactNode
+}
+
+function AuthLayout({ eyebrow, title, description, children }: AuthLayoutProps) {
   return (
     <main className="auth-page">
       <section className="auth-intro" aria-label="Giới thiệu StudyNest">

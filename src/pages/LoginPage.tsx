@@ -1,28 +1,41 @@
 import { useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ApiError } from '../api/httpClient'
 import { useAuth } from '../auth/useAuth'
 import AuthLayout from '../components/AuthLayout'
 import FormField from '../components/FormField'
+import type { FieldErrors, LoginRequest } from '../types/auth'
+
+interface LoginLocationState {
+  registeredEmail?: string
+  from?: { pathname: string }
+}
 
 function LoginPage() {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [fieldErrors, setFieldErrors] = useState({})
+  const [form, setForm] = useState<LoginRequest>({ email: '', password: '' })
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const registeredEmail = location.state?.registeredEmail
-  const destination = location.state?.from?.pathname ?? '/dashboard'
+  const locationState = location.state as LoginLocationState | null
+  const registeredEmail = locationState?.registeredEmail
+  const destination = locationState?.from?.pathname ?? '/dashboard'
 
-  function handleChange(event) {
-    const { name, value } = event.target
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.currentTarget
     setForm((current) => ({ ...current, [name]: value }))
-    setFieldErrors((current) => ({ ...current, [name]: undefined }))
+    setFieldErrors((current) => {
+      const next = { ...current }
+      delete next[name]
+      return next
+    })
     setSubmitError('')
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsSubmitting(true)
     setSubmitError('')
@@ -32,8 +45,8 @@ function LoginPage() {
       await login(form)
       navigate(destination, { replace: true })
     } catch (error) {
-      setFieldErrors(error.fieldErrors ?? {})
-      setSubmitError(error.message)
+      setFieldErrors(error instanceof ApiError ? error.fieldErrors : {})
+      setSubmitError(error instanceof Error ? error.message : 'Đăng nhập không thành công.')
     } finally {
       setIsSubmitting(false)
     }
