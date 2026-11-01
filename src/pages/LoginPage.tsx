@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/httpClient'
 import { useAuth } from '../auth/useAuth'
-import AuthLayout from '../components/AuthLayout'
+import AuthMockupLayout from '../components/AuthMockupLayout'
 import FormField from '../components/FormField'
 import type { FieldErrors, LoginRequest } from '../types/auth'
 
@@ -16,6 +16,7 @@ function LoginPage() {
   const [form, setForm] = useState<LoginRequest>({ email: '', password: '' })
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState('')
+  const [showPasswordHelp, setShowPasswordHelp] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -53,10 +54,10 @@ function LoginPage() {
   }
 
   return (
-    <AuthLayout
-      eyebrow="Chào mừng trở lại"
-      title="Đăng nhập vào StudyNest"
-      description="Tiếp tục hành trình học tập của bạn."
+    <AuthMockupLayout
+      variant="login"
+      title="Đăng nhập"
+      description="Chào mừng bạn quay trở lại StudyNest!"
     >
       {registeredEmail && (
         <div className="alert alert--success" role="status">
@@ -66,13 +67,15 @@ function LoginPage() {
 
       {submitError && <div className="alert alert--error" role="alert">{submitError}</div>}
 
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+      {showPasswordHelp && <div className="alert alert--error" role="status">Chức năng đặt lại mật khẩu chưa có trong phiên bản này.</div>}
+
+      <form className="auth-form auth-form--login" onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           name="email"
           type="email"
           label="Email"
-          placeholder="ban@example.com"
+          placeholder="Nhập địa chỉ email của bạn"
           autoComplete="email"
           value={form.email}
           onChange={handleChange}
@@ -83,6 +86,7 @@ function LoginPage() {
           id="password"
           name="password"
           type="password"
+          maxLength={72}
           label="Mật khẩu"
           placeholder="Nhập mật khẩu"
           autoComplete="current-password"
@@ -92,15 +96,16 @@ function LoginPage() {
           required
         />
 
+        <button className="auth-mockup__forgot" type="button" onClick={() => setShowPasswordHelp((current) => !current)}>Quên mật khẩu?</button>
+
         <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          {isSubmitting ? 'Đang đăng nhập...' : <>Đăng nhập <span aria-hidden="true">→</span></>}
         </button>
       </form>
 
-      <p className="auth-switch">
-        Chưa có tài khoản? <Link to="/signup">Đăng ký ngay</Link>
-      </p>
-    </AuthLayout>
+      <div className="auth-mockup__divider"><span>Hoặc</span></div>
+      <Link className="auth-mockup__secondary-button" to="/signup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="4" /><path d="M4 21v-2a8 8 0 0 1 16 0v2z" /></svg> Tạo tài khoản</Link>
+    </AuthMockupLayout>
   )
 }
 

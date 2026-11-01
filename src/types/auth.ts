@@ -1,8 +1,10 @@
+import type { Role } from './phaseA'
+
 export interface AuthUser {
   id: number
   fullName: string
   email: string
-  role: string
+  role: Role
 }
 
 export interface LoginRequest {

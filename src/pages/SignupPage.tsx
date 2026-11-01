@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/httpClient'
 import { useAuth } from '../auth/useAuth'
-import AuthLayout from '../components/AuthLayout'
+import AuthMockupLayout from '../components/AuthMockupLayout'
 import FormField from '../components/FormField'
 import type { FieldErrors, SignupRequest } from '../types/auth'
 
@@ -20,6 +20,7 @@ function SignupPage() {
   const [form, setForm] = useState(initialForm)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { signup } = useAuth()
   const navigate = useNavigate()
@@ -38,6 +39,7 @@ function SignupPage() {
   function validate(): FieldErrors {
     const errors: FieldErrors = {}
     if (form.password.length < 8) errors.password = 'Mật khẩu cần có ít nhất 8 ký tự.'
+    if (form.password.length > 72) errors.password = 'Mật khẩu tối đa 72 ký tự.'
     if (form.password !== form.confirmPassword) {
       errors.confirmPassword = 'Mật khẩu xác nhận chưa khớp.'
     }
@@ -50,6 +52,10 @@ function SignupPage() {
 
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors)
+      return
+    }
+    if (!acceptedTerms) {
+      setSubmitError('Vui lòng đồng ý với điều khoản trước khi đăng ký.')
       return
     }
 
@@ -76,20 +82,20 @@ function SignupPage() {
   }
 
   return (
-    <AuthLayout
-      eyebrow="Bắt đầu miễn phí"
-      title="Tạo tài khoản StudyNest"
-      description="Tạo tài khoản để lưu kết quả và theo dõi tiến độ học tập."
+    <AuthMockupLayout
+      variant="signup"
+      title="Tạo tài khoản"
+      description="Tham gia StudyNest để lưu tiến trình học tập và khám phá nhiều cơ hội mới."
     >
       {submitError && <div className="alert alert--error" role="alert">{submitError}</div>}
 
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+      <form className="auth-form auth-form--signup" onSubmit={handleSubmit} noValidate>
         <FormField
           id="fullName"
           name="fullName"
           type="text"
           label="Họ và tên"
-          placeholder="Nguyễn Văn An"
+          placeholder="Nhập họ và tên của bạn"
           autoComplete="name"
           value={form.fullName}
           onChange={handleChange}
@@ -101,30 +107,31 @@ function SignupPage() {
           name="email"
           type="email"
           label="Email"
-          placeholder="ban@example.com"
+          placeholder="Nhập địa chỉ email của bạn"
           autoComplete="email"
           value={form.email}
           onChange={handleChange}
           error={fieldErrors.email}
           required
         />
-        <div className="form-row">
-          <FormField
+        <div className="auth-mockup__password-field"><FormField
             id="password"
             name="password"
             type="password"
+            maxLength={72}
             label="Mật khẩu"
-            placeholder="Tối thiểu 8 ký tự"
+            placeholder="Tạo mật khẩu"
             autoComplete="new-password"
             value={form.password}
             onChange={handleChange}
             error={fieldErrors.password}
             required
-          />
+          /><p className="auth-password-hint">Mật khẩu dài từ 8 đến 72 ký tự.</p></div>
           <FormField
             id="confirmPassword"
             name="confirmPassword"
             type="password"
+            maxLength={72}
             label="Xác nhận mật khẩu"
             placeholder="Nhập lại mật khẩu"
             autoComplete="new-password"
@@ -133,17 +140,16 @@ function SignupPage() {
             error={fieldErrors.confirmPassword}
             required
           />
-        </div>
+
+        <label className="auth-mockup__terms"><input type="checkbox" checked={acceptedTerms} onChange={(event) => { setAcceptedTerms(event.target.checked); setSubmitError('') }} /><span>Tôi đồng ý với <strong>Điều khoản sử dụng</strong> và <strong>Chính sách bảo mật</strong></span></label>
 
         <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
+          {isSubmitting ? 'Đang tạo tài khoản...' : 'Đăng ký'}
         </button>
       </form>
 
-      <p className="auth-switch">
-        Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-      </p>
-    </AuthLayout>
+      <p className="auth-switch">Đã có tài khoản? <Link to="/login">Đăng nhập</Link></p>
+    </AuthMockupLayout>
   )
 }
 
